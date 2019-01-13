@@ -13,11 +13,24 @@ param
 (
 	[String]$targetpath=$pwd,
 	[String]$command="",
-	[Bool]$verbose=$false,
+	[Bool]$verbose=$true,
 	[Bool]$forcedexecution=$false
 )
 
-	[String]$gitfolder="\.git"
+[String]$gitfolder="\.git"
+
+# Function to log message in case verbose mode has been set to $true
+# Operates with three arguments at most
+# $args[0] - the format string, the message that contains 2 placeholders at most
+# $args[1] - the value of the first placeholder
+# $args[2] - the value of the second placeholder
+function Write-Host-If-Verbose
+{
+	If($verbose -eq $true)
+	{
+		Write-Host($args[0] -f $args[1], $args[2]) -ForegroundColor Cyan
+	}
+}
 
 # Get all directories and hidden directories recursively within the given directory
 Get-ChildItem -Recurse -Attributes Directory,Directory+Hidden -Path $targetpath | % {
@@ -40,44 +53,44 @@ Get-ChildItem -Recurse -Attributes Directory,Directory+Hidden -Path $targetpath 
 			If($forcedexecution -eq $true)
 			{
 				#If verbose mode have been set, log info
-				If($verbose -eq $true)
-				{
-					Write-Host("Running command ({0}) in {1}" -f $command, $fullFolderName) -ForegroundColor Cyan
-				}
+				Write-Host-If-Verbose "Running command ({0}) in {1}" $command $fullFolderName
 				Invoke-Expression($command)
 			}
 			#If forced execution hasn't been set, ask user if he/she wants to run the command for the current repository
 			Else
 			{
-				[String]$runCommand = Read-Host -Prompt "Would you like to run $command command for on $fullFolderName repository? (Yes (y), No (n), Cancel (c))"
-				If ($runCOmmand -eq "y")
+				[Bool]$isValidInput = $false
+				While (-Not $isValidInput)
 				{
-					#If verbose mode have been set, log info
-					If($verbose -eq $true)
+					[String]$runCommand = Read-Host -Prompt "Would you like to run command ($command) on $fullFolderName repository? (Yes (y), No (n), Cancel (c))"
+					If ($runCOmmand.ToLower() -eq "y")
 					{
-						Write-Host("Running command ({0}) in {1}" -f $command, $fullFolderName) -ForegroundColor Cyan
+						#If verbose mode have been set, log info
+						$isValidInput = $true
+						Write-Host-If-Verbose "Running command ({0}) in {1}" $command $fullFolderName
+						Invoke-Expression($command)
 					}
-					Invoke-Expression($command)
-				}
-				ElseIf ($runCOmmand -eq "n")
-				{
-					#If verbose mode have been set, log info
-					If($verbose -eq $true)
+					ElseIf ($runCOmmand.ToLower() -eq "n")
 					{
-						Write-Host("Skipping the running of command ({0}) in {1}" -f $command, $fullFolderName) -ForegroundColor Cyan
+						#If verbose mode have been set, log info
+						$isValidInput = $true
+						Write-Host-If-Verbose "Skipping the running of command ({0}) in {1}" $command $fullFolderName
 					}
-				}
-				ElseIf ($runCOmmand -eq "c")
-				{
-					#If verbose mode have been set, log info
-					If($verbose -eq $true)
+					ElseIf ($runCOmmand.ToLower() -eq "c")
 					{
-						Write-Host("Running of the whole script is cancelled") -ForegroundColor Cyan
+						#If verbose mode have been set, log info
+						$isValidInput = $true
+						Write-Host-If-Verbose "Cancel running command ({0}) on repositories of following directory: {1}" $command $targetpath 
+						Pop-Location
+						Exit
 					}
-					Exit
+					Else
+					{
+						#Invalid input, user should try again
+						Write-Host("Invalid input({0})! Please choose a valid option." -f $runCOmmand) -ForegroundColor Yellow 
+					}
 				}
 			}
-			
 			#Get back to the original location
 			Pop-Location
 		}
