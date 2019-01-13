@@ -25,10 +25,10 @@ Get-ChildItem -Recurse -Attributes Directory,Directory+Hidden -Path $targetpath 
 	[String]$fullGitFolderPath = "$fullFolderName$gitfolder"
 	
 	# If the current folder contains the .git folder, then it is a git repository
-	if (Test-Path($fullGitFolderPath))
+	If (Test-Path($fullGitFolderPath))
 	{
 		# If we are in a git repository, and we've got a command available we should run the given command
-		if ($command -ne "")
+		If ($command -ne "")
 		{
 			#Save current path
 			Push-Location $targetpath
@@ -37,25 +37,51 @@ Get-ChildItem -Recurse -Attributes Directory,Directory+Hidden -Path $targetpath 
 			Set-Location -Path $fullFolderName
 
 			#If forced execution has been set, run command
-			if($forcedexecution -eq $true)
+			If($forcedexecution -eq $true)
 			{
 				#If verbose mode have been set, log info
-				if($verbose -eq $true)
+				If($verbose -eq $true)
 				{
 					Write-Host("Running command ({0}) in {1}" -f $command, $fullFolderName) -ForegroundColor Cyan
 				}
 				Invoke-Expression($command)
 			}
 			#If forced execution hasn't been set, ask user if he/she wants to run the command for the current repository
-			else
+			Else
 			{
 				[String]$runCommand = Read-Host -Prompt "Would you like to run $command command for on $fullFolderName repository? (Yes (y), No (n), Cancel (c))"
+				If ($runCOmmand -eq "y")
+				{
+					#If verbose mode have been set, log info
+					If($verbose -eq $true)
+					{
+						Write-Host("Running command ({0}) in {1}" -f $command, $fullFolderName) -ForegroundColor Cyan
+					}
+					Invoke-Expression($command)
+				}
+				ElseIf ($runCOmmand -eq "n")
+				{
+					#If verbose mode have been set, log info
+					If($verbose -eq $true)
+					{
+						Write-Host("Skipping the running of command ({0}) in {1}" -f $command, $fullFolderName) -ForegroundColor Cyan
+					}
+				}
+				ElseIf ($runCOmmand -eq "c")
+				{
+					#If verbose mode have been set, log info
+					If($verbose -eq $true)
+					{
+						Write-Host("Running of the whole script is cancelled") -ForegroundColor Cyan
+					}
+					Exit
+				}
 			}
 			
 			#Get back to the original location
 			Pop-Location
 		}
-		else 
+		Else
 		{
 			Write-Host("No command provided to run in {0}" -f $fullFolderName) -ForegroundColor Magenta 
 		}
