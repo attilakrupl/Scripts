@@ -12,22 +12,48 @@
 param
 (
 	[String]$targetpath=$pwd,
-	[String]$command=""
+	[String]$command="",
+	[Bool]$verbose=$false,
+	[Bool]$forcedexecution=$false
 )
 
 	[String]$gitfolder="\.git"
 
 # Get all directories and hidden directories recursively within the given directory
-# If the current folder contains the .git folder, then it is a git repository
-# If we are in a git repository, we should run the given command
 Get-ChildItem -Recurse -Attributes Directory,Directory+Hidden -Path $targetpath | % {
 	[String]$fullFolderName = $_.FullName
 	[String]$fullGitFolderPath = "$fullFolderName$gitfolder"
+	
+	# If the current folder contains the .git folder, then it is a git repository
 	if (Test-Path($fullGitFolderPath))
 	{
+		# If we are in a git repository, and we've got a command available we should run the given command
 		if ($command -ne "")
 		{
-			Invoke-Expression($command)
+			#Save current path
+			Push-Location $targetpath
+
+			#Change location to the git repositories folder
+			Set-Location -Path $fullFolderName
+
+			#If forced execution has been set, run command
+			if($forcedexecution -eq $true)
+			{
+				#If verbose mode have been set, log info
+				if($verbose -eq $true)
+				{
+					Write-Host("Running command ({0}) in {1}" -f $command, $fullFolderName) -ForegroundColor Cyan
+				}
+				Invoke-Expression($command)
+			}
+			#If forced execution hasn't been set, ask user if he/she wants to run the command for the current repository
+			else
+			{
+				[String]$runCommand = Read-Host -Prompt "Would you like to run $command command for on $fullFolderName repository? (Yes (y), No (n), Cancel (c))"
+			}
+			
+			#Get back to the original location
+			Pop-Location
 		}
 		else 
 		{
