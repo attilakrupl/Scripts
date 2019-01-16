@@ -1,12 +1,17 @@
 <#
 .SYNOPSIS
-    This script runs defined command in a defined parent directory of multiple git repositories recursively.
+	This script runs defined command in a defined parent directory of multiple git repositories recursively.
 .DESCRIPTION
-    The user can either apply selected git command in present working directory, or can provide a custom path for running git command.
+	The user can either apply selected git command in present working directory, or can provide a custom path for running git command.
 .PARAMETER -tragetpath 
 	The path of selected parent directory, otherwise it is the current working directory
 .PARAMETER -command 
 	Sepcifies the git command the user is about to run for each target repository. 
+.NOTES
+	Version:        1.0
+  	Author:         Attila Krupl
+  	Creation Date:  13-01-2019
+  	Purpose/Change: Initial script development
 #>
 
 param
